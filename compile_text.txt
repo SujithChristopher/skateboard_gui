@@ -1,0 +1,1 @@
+pyuic5 -x design_v1.ui -o gui_box_v1.py
