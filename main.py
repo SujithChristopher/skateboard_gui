@@ -13,12 +13,11 @@ from PyQt5.QtGui import *
 from cv2 import aruco
 from pykinect2 import PyKinectRuntime
 from pykinect2 import PyKinectV2
-from pykinect2.PyKinectRuntime import _CameraSpacePoint
 from scipy import signal
 
 from gui_box_v1 import Ui_MainWindow
-from mapper import color_2_world
 from support_mp4 import generate_pdf
+
 
 # 290,111
 kinectColor = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Color)
