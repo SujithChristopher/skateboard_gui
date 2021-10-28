@@ -5,6 +5,7 @@ import time
 
 import cv2
 import matplotlib.pyplot as plt
+import mediapipe as mp
 import numpy as np
 import pandas as pd
 from PyQt5 import QtWidgets
@@ -13,11 +14,11 @@ from PyQt5.QtGui import *
 from cv2 import aruco
 from pykinect2 import PyKinectRuntime
 from pykinect2 import PyKinectV2
+from pykinect2.PyKinectRuntime import _CameraSpacePoint
 from scipy import signal
 
 from gui_box_v1 import Ui_MainWindow
 from support_mp4 import generate_pdf
-
 
 # 290,111
 kinectColor = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Color)
@@ -26,8 +27,9 @@ kinectDepth = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Depth)
 kinect = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Color | PyKinectV2.FrameSourceTypes_Depth)
 _kinect = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Depth | PyKinectV2.FrameSourceTypes_Color)
 
+mp_pose = mp.solutions.pose
 
-"""file and path for calibratoin file"""
+"""open file dialog and path selection"""
 calib_pth = ".//src//calib_aruco_dict_original_01.pickle"
 print(str(calib_pth))
 # Check for camera calibration data
@@ -60,6 +62,17 @@ rotation_vectors, translation_vectors = None, None
 axis = np.float32([[-.5, -.5, 0], [-.5, .5, 0], [.5, .5, 0], [.5, -.5, 0],
                    [-.5, -.5, 1], [-.5, .5, 1], [.5, .5, 1], [.5, -.5, 1]])
 
+
+def find_peaks(data, threshold):
+    count = 0
+    trigger = True
+    for i in data:
+        if i > threshold and trigger:
+            count += 1
+            trigger = False
+        if i < threshold and not trigger:
+            trigger = True
+    return count
 
 
 class WorkerSignals(QObject):
@@ -133,6 +146,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.start_program.clicked.connect(self.start_process)
         self.set_orgin.clicked.connect(self.orign_set)
 
+        self.mp_drawing = mp.solutions.drawing_utils
+        self.mp_holistic = mp.solutions.holistic
         self.start_p = False
         # self.start_process = False
         self.cur_time = 0
@@ -269,6 +284,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         pass
 
     def runCam(self, progress_callback):
+        mp_pose = mp.solutions.pose
+        pose = mp_pose.PoseLandmark
+
         yPos = 111
         xPos = 290
         yRes = self.yRes
