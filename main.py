@@ -27,6 +27,7 @@ kinectDepth = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Depth)
 kinect = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Color | PyKinectV2.FrameSourceTypes_Depth)
 _kinect = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Depth | PyKinectV2.FrameSourceTypes_Color)
 
+
 mp_pose = mp.solutions.pose
 
 """open file dialog and path selection"""
@@ -203,9 +204,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 pass
         print("orgin saved")
 
-
-
-
     def checkedcpp(self, checked):
         if checked:
             self.pose = True
@@ -248,7 +246,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         plt.scatter(self.cam_space["X"], self.cam_space["Z"], c="r")
         plt.savefig(".//src//figure_scatter.png")
         plt.clf()
-
 
         plt.subplot(3, 1, 1)
         plt.title("Coordinates")
@@ -350,7 +347,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                                     cameraMatrix,
                                     distCoeffs)
                                 for rvec, tvec in zip(rotation_vectors, translation_vectors):
-                                    self.colorImage = aruco.drawAxis(self.colorImage, cameraMatrix, distCoeffs, rvec, tvec, 0.04)
+                                    self.colorImage = aruco.drawAxis(self.colorImage, cameraMatrix, distCoeffs, rvec,
+                                                                     tvec, 0.04)
                                     self.tvec_dist = tvec
 
                                     self.cam_space.loc[count, self.cl_names[0]] = self.time_float
