@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 #include <Encoder.h>
-#define sync 19
+#define sync 3
 
 using namespace std::chrono;
 using timePoint = teensy_clock::time_point; // alias to save typing...
@@ -22,7 +22,6 @@ Encoder wheel_rr(10, 11); // rear right wheel
 Encoder wheel_rl(9, 8); // rear left wheel
 
 
-
 //   avoid using pins with LEDs attached
 void setup() {
   Serial1.begin(115200);
@@ -31,6 +30,10 @@ void setup() {
   teensy_clock::begin(); // this will sync the teensy_clock to the RTC
 
   Wire.begin();
+
+  mpu1.begin(1, 0);
+  mpu1.calcOffsets(true, true);
+  mpu1.setFilterGyroCoef(0.98);
 
   pinMode(sync, INPUT);
 
@@ -63,6 +66,15 @@ void loop() {
   _rawTime = rawTime;
   _mils = millis();
 
+  mpu1.update();
+
+  gyrox1 = (mpu1.getGyroX());
+  gyroy1 = (mpu1.getGyroY());
+  gyroz1 = (mpu1.getGyroZ());
+  accelx1 = (mpu1.getAccX());
+  accely1 = (mpu1.getAccY());
+  accelz1 = (mpu1.getAccZ());
+
   // getting trigger pulse from motion capture
   _s = digitalRead(sync);
   if (_s == 0) {
@@ -73,7 +85,7 @@ void loop() {
 
     _sync = '1';
   }
-  Serial.println(_s);
+  // Serial.println(_s);
 
   // encoder program below
 
@@ -104,14 +116,14 @@ void loop() {
   a_rl = p_rl * 0.09;
 
 
-  //  Serial.print(p_fr); // point front right
-  //  Serial.print(" ");
-  //  Serial.print(p_fl);
-  //  Serial.print(" ");
-  //  Serial.print(p_rr);
-  //  Serial.print(" ");
-  //  Serial.print(rawTime);
-  //  Serial.print("\n");
+   Serial.print(accelx1); // point front right
+   Serial.print(" ");
+   Serial.print(accely1);
+   Serial.print(" ");
+   Serial.print(accelz1);
+   Serial.print(" ");
+   Serial.print(rawTime);
+   Serial.print("\n");
 
   //  getdat(pos_val, );
   writeEncoderStream();
