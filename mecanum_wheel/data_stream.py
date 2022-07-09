@@ -93,6 +93,7 @@ class SerialPort(object):
         cv2.destroyAllWindows()
 
     def serial_write(self, payload):
+        
         # Format:
         # | 255 | 255 | no. of bytes | payload | checksum |
 
