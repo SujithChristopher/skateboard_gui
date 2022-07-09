@@ -18,7 +18,7 @@ from pykinect2.PyKinectRuntime import _CameraSpacePoint
 from scipy import signal
 
 from gui_box_v1 import Ui_MainWindow
-from support_mp4 import generate_pdf
+from support.support_mp4 import generate_pdf
 
 # 290,111
 

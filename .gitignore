@@ -1,6 +1,6 @@
 __pycache__
 .idea
-
+.vscode
 video_recordings
 test_programs/images
 mecanum_wheel/__pycache__
