@@ -128,13 +128,10 @@ void writeSensorStream()
   _temp = _chr.bytes[0];
   Serial1.write(_temp);
   chksum += _temp;
-  Serial.print(_temp);
-
-  // Serial.print(" sent ");
-
-
+  
   //Send checksum
   Serial1.write(chksum);
+  // Serial.print(" sent ");
 
 }
 

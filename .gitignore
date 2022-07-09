@@ -5,3 +5,4 @@ video_recordings
 test_programs/images
 mecanum_wheel/__pycache__
 mecanum_wheel/ipy_notebooks/__pycache__
+data
