@@ -13,6 +13,7 @@ import time
 import cv2
 import threading
 import os
+from pymf import get_MF_devices
 
 class SerialPort(object):
     # Contains functions that enable communication between the docking station and the IMU watches
@@ -54,13 +55,23 @@ class SerialPort(object):
         self.triggered = True
         self.connected = False
 
+        """finding the camera"""
+
+        device_list = get_MF_devices()
+        for i, device_name in enumerate(device_list):
+            print(f"opencv_index: {i}, device_name: {device_name}")
+            if device_name.startswith("Kinect"):
+                self.camera_device = i
+                print("found camera")
+                break
+
         stdout.write("Initializing imu program\n")
 
     """capture video frames and save it to a file"""
     def capture_video(self):
 
         # define a video capture object
-        vid = cv2.VideoCapture(0)
+        vid = cv2.VideoCapture(self.camera_device)
         
         while(True):
             
@@ -93,7 +104,7 @@ class SerialPort(object):
         cv2.destroyAllWindows()
 
     def serial_write(self, payload):
-        
+
         # Format:
         # | 255 | 255 | no. of bytes | payload | checksum |
 
@@ -142,9 +153,7 @@ class SerialPort(object):
                 _sync = struct.unpack("c", self.payload[28:29])[0].decode("utf-8")
                 _imu_data = struct.unpack("6f", self.payload[29:])
 
-                
-
-                print(mils)
+                # print(mils)
 
                 _rtcval = datetime.fromtimestamp(_rtc[0]).strftime("%Y-%m-%d %I.%M.%S.%f %p")
 
@@ -201,6 +210,6 @@ if __name__ == '__main__':
         "serialport": "COM4",
         "serialrate": 115200}
 
-    myport = SerialPort(params, _foldername="testing3")
+    myport = SerialPort(params, _foldername="testing5")
     myport.run_program()
 

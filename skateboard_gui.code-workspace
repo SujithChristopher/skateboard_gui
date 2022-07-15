@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"name": "firmware_skateboard",
+			"path": "firmware_skateboard"
+		}
+	],
+	"settings": {}
+}

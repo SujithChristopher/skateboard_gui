@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 #include <Encoder.h>
-#define sync 3
+#define sync 23
 
 using namespace std::chrono;
 using timePoint = teensy_clock::time_point; // alias to save typing...
@@ -122,7 +122,7 @@ void loop() {
    Serial.print(" ");
    Serial.print(accelz1);
    Serial.print(" ");
-   Serial.print(rawTime);
+  //  Serial.print(rawTime);
    Serial.print("\n");
 
   //  getdat(pos_val, );
