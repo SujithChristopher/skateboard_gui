@@ -53,7 +53,7 @@ def camera_parameters(ar_parameters = None, ar_dictionary = None, markerLength =
     return ARUCO_PARAMETERS, ARUCO_DICT, board
 
 
-def estimate_ar_pose(frame, cameraMatrix=cameraMatrix, distCoeffs=distCoeffs):
+def estimate_ar_pose(frame, cameraMatrix=cameraMatrix, distCoeffs=distCoeffs, ar_params = None, ar_dict = None, board = None):
 
     """
     frame: frame to be processed
@@ -61,8 +61,13 @@ def estimate_ar_pose(frame, cameraMatrix=cameraMatrix, distCoeffs=distCoeffs):
     distCoeffs: distortion coefficients from calibration file
     """
 
+    ARUCO_PARAMETERS = ar_params
+    ARUCO_DICT = ar_dict
+
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    ARUCO_PARAMETERS, ARUCO_DICT, board = camera_parameters()
+
+    # ARUCO_PARAMETERS, ARUCO_DICT, board = camera_parameters()
+    
     corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, ARUCO_DICT, parameters=ARUCO_PARAMETERS)
 
     # Refine detected markers
@@ -88,6 +93,7 @@ def get_ar_pose_data(_pth, cameraMatrix=cameraMatrix, distCoeffs=distCoeffs, pro
     df = pd.DataFrame(columns=["frame_id", "x", "y", "z", "yaw", "pitch", "roll"])
     rotation_vectors, translation_vectors = None, None
 
+    ar_params, ar_dict, board = camera_parameters()
 
     if process_raw:
         targetPattern = f"{_pth}\\COLOUR*"
@@ -99,7 +105,7 @@ def get_ar_pose_data(_pth, cameraMatrix=cameraMatrix, distCoeffs=distCoeffs, pro
             unpacker = mp.Unpacker(cfile, object_hook=mpn.decode)
             for frame in unpacker:
 
-                rotation_vectors, translation_vectors, _ = estimate_ar_pose(frame, cameraMatrix=cameraMatrix, distCoeffs=distCoeffs)
+                rotation_vectors, translation_vectors, _ = estimate_ar_pose(frame, cameraMatrix=cameraMatrix, distCoeffs=distCoeffs, ar_params = ar_params, ar_dict = ar_dict, board = board)
                 data = [5]
                 if rotation_vectors is not None:
                     data.extend(translation_vectors[0][0])
@@ -126,8 +132,8 @@ def get_ar_pose_data(_pth, cameraMatrix=cameraMatrix, distCoeffs=distCoeffs, pro
             else:
                 break
         cap.release()
-        print("returning dataframe")
-        print(df)
+    print("returning dataframe")
+    print(df)
     return df
 
 
