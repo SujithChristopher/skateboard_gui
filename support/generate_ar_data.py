@@ -22,6 +22,7 @@ for unpacked in unpacker:
 
 cameraMatrix = _calib[0][0]
 distCoeffs = _calib[0][1]
+_calib_file.close()
 
 
 def camera_parameters(ar_parameters = None, ar_dictionary = None, markerLength = 0.05, markerSeparation = 0.01):
@@ -133,7 +134,6 @@ def get_ar_pose_data(_pth, cameraMatrix=cameraMatrix, distCoeffs=distCoeffs, pro
                 break
         cap.release()
     print("returning dataframe")
-    print(df)
     return df
 
 
