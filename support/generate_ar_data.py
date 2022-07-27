@@ -82,7 +82,7 @@ def estimate_ar_pose(frame, cameraMatrix=cameraMatrix, distCoeffs=distCoeffs, ar
             cameraMatrix = cameraMatrix,
             distCoeffs = distCoeffs)
 
-    rotation_vectors, translation_vectors, _objPoints = aruco.estimatePoseSingleMarkers(corners, 1, cameraMatrix, distCoeffs)
+    rotation_vectors, translation_vectors, _objPoints = aruco.estimatePoseSingleMarkers(corners, 0.05, cameraMatrix, distCoeffs)
     return rotation_vectors, translation_vectors, _objPoints
 
 
@@ -108,9 +108,12 @@ def get_ar_pose_data(_pth, cameraMatrix=cameraMatrix, distCoeffs=distCoeffs, pro
 
                 rotation_vectors, translation_vectors, _ = estimate_ar_pose(frame, cameraMatrix=cameraMatrix, distCoeffs=distCoeffs, ar_params = ar_params, ar_dict = ar_dict, board = board)
                 data = [5]
-                if rotation_vectors is not None:
+                if rotation_vectors is not None and rotation_vectors is not []:
                     data.extend(translation_vectors[0][0])
                     data.extend(rotation_vectors[0][0])
+                    df.loc[len(df)] = data
+                else:
+                    data.extend([np.nan, np.nan, np.nan, np.nan, np.nan, np.nan])
                     df.loc[len(df)] = data
                 
             cfile.close()
@@ -124,17 +127,62 @@ def get_ar_pose_data(_pth, cameraMatrix=cameraMatrix, distCoeffs=distCoeffs, pro
             if ret:
                 rotation_vectors, translation_vectors, _ = estimate_ar_pose(frame, cameraMatrix=cameraMatrix, distCoeffs=distCoeffs)
 
-                data = [5]
+                data = []
                 if rotation_vectors is not None:
                     data.extend(translation_vectors[0][0])
                     data.extend(rotation_vectors[0][0])
                     df.loc[len(df)] = data
+                else:
+                    data.extend([np.nan, np.nan, np.nan, np.nan, np.nan, np.nan])
+                    df.loc[len(df)] = data
+                
+                rotation_vectors = None
+                translation_vectors = None
                 
             else:
                 break
         cap.release()
     print("returning dataframe")
     return df
+
+def detect_ar_markers(frame, ar_params = None, ar_dict = None, board = None):
+
+    """
+    frame: frame to be processed
+    cameraMatrix: camera matrix from calibration
+    distCoeffs: distortion coefficients from calibration file
+    """
+
+    ARUCO_PARAMETERS = ar_params
+    ARUCO_DICT = ar_dict
+
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+    # ARUCO_PARAMETERS, ARUCO_DICT, board = camera_parameters()
+    
+    corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, ARUCO_DICT, parameters=ARUCO_PARAMETERS)
+
+    return corners, ids, rejectedImgPoints
+
+def add_time_col(df, _pth):
+    
+    targetPattern = f"{_pth}\\PARAM*"
+    param_file = glob.glob(targetPattern)[0]
+
+    # Read in the param file
+    with open(param_file, "rb") as f:
+        unpacker = mp.Unpacker(f, object_hook=mpn.decode)
+        _tmp = []
+        for counter, _obj in enumerate(unpacker):
+            if counter >1:
+
+                _tmp.append(_obj[0])
+            
+        df["time"] = _tmp
+    
+    return df
+
+
 
 
 
