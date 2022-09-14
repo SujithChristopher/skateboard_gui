@@ -20,7 +20,7 @@ sys.path.append(append_path)
 
 """ this program detectes the video frames and generates calibration file"""
 
-def calibrate_camera(pth, pth_to_save="", markerLength=5, markerSeparation=1, drop_frames=50):
+def calibrate_camera(pth, pth_to_save="", markerLength=5, markerSeparation=1, drop_frames=50, img_flip = True):
 
     """
     pth: path to video (msgpack) files containing calibration data
@@ -56,7 +56,9 @@ def calibrate_camera(pth, pth_to_save="", markerLength=5, markerSeparation=1, dr
         color_file = open(fname, 'rb')
         unpacker = mp.Unpacker(color_file, object_hook=mpn.decode)
         for unpacked in unpacker:
-            unpacked = cv2.flip(unpacked, 1)
+            if img_flip:
+                unpacked = cv2.flip(unpacked, 1)
+
             color_frame.append(unpacked)
 
     counter, corners_list, id_list = [], [], []
