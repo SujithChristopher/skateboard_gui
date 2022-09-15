@@ -56,6 +56,8 @@ class DualCameraRecorder:
 
         self.device_list = get_camera_list()
 
+        self.start_recording = False
+
         self.webcam_id = self.device_list.index("e2eSoft iVCam")
 
     
@@ -84,7 +86,7 @@ class DualCameraRecorder:
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2GRAY)
                 frame = frame[self.yPos * 2:self.yPos * 2 + self.yRes, self.xPos * 2:self.xPos * 2 + self.xRes].copy()
 
-                if self.record:
+                if self.record and self.start_recording:
                     _packed_file = mp.packb(frame, default=mpn.encode)
                     _save_file.write(_packed_file)
                     _time_stamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
@@ -103,6 +105,10 @@ class DualCameraRecorder:
                     
                     self.kill_thread()  # finishing the loop
                     cv2.destroyAllWindows()
+                
+                if keyboard.is_pressed('s'):  # if key 's' is pressed
+                    print('You Pressed A Key!, started recording from kinect')
+                    self.start_recording = True
 
                 if self.kill_signal:
                     break
@@ -135,7 +141,7 @@ class DualCameraRecorder:
             color_image = color_image[self.yPos:self.yPos + self.yResRs, self.xPos:self.xPos + self.xResRs].copy()
             gray_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2GRAY)
 
-            if self.record:
+            if self.record and self.start_recording:
                 _packed_file = mp.packb(gray_image, default=mpn.encode)
                 _save_file.write(_packed_file)
                 _time_stamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
@@ -153,6 +159,10 @@ class DualCameraRecorder:
 
             if self.kill_signal:
                 break
+
+            if keyboard.is_pressed('s'):  # if key 's' is pressed
+                print('You Pressed A Key!, started recording from realsense')
+                self.start_recording = True
                 
             if keyboard.is_pressed('q'):  # if key 'q' is pressed 
                 print('You Pressed A Key!, ending realsense')
@@ -160,6 +170,7 @@ class DualCameraRecorder:
 
                 cv2.destroyAllWindows()
                 break
+
         if self.record:
             _save_file.close()
             _timestamp_file.close()
@@ -169,8 +180,8 @@ class DualCameraRecorder:
 
         #list available webcam
         cap = cv2.VideoCapture(self.webcam_id)
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 720)
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1280)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
         cap.set(cv2.CAP_PROP_FPS, 15)
 
         if self.record:
@@ -183,7 +194,7 @@ class DualCameraRecorder:
             gray_image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             gray_image = gray_image[self.yPos:self.yPos + self.yResRs, self.xPos:self.xPos + self.xResRs].copy()
 
-            if self.record:
+            if self.record and self.start_recording:
                 _packed_file = mp.packb(gray_image, default=mpn.encode)
                 _save_file.write(_packed_file)
                 _time_stamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
@@ -205,6 +216,10 @@ class DualCameraRecorder:
                     _save_file.close()
                     _timestamp_file.close()
                 break
+            
+            if keyboard.is_pressed('s'):  # if key 's' is pressed
+                print('You Pressed A Key!, started recording from webcam')
+                self.start_recording = True
                 
     def record_for_calibration(self):
         """
@@ -239,7 +254,7 @@ class DualCameraRecorder:
 
         if cart_sensors:
 
-            myport = SerialPort("COM4", 115200, csv_path=self._pth, csv_enable=True)
+            myport = SerialPort("COM4", 115200, csv_path=self._pth, csv_enable=True, single_file_protocol=True)
 
             kinect_capture_frame = multiprocessing.Process(target=self.kinect_capture_frame)
             rs_capture_frame = multiprocessing.Process(target=self.rs_capture_frame)
@@ -266,7 +281,7 @@ if __name__ == "__main__":
     # main program
 
     """Enter the respective parameters"""
-    record = False
+    record = True
     if record:
         _name = input("Enter the name of the recording: ")
     display = True
@@ -279,7 +294,7 @@ if __name__ == "__main__":
             os.makedirs(_pth)
 
     recorder = DualCameraRecorder(_pth, display=display, record=record)
-    recorder.run(cart_sensors=False)
+    recorder.run(cart_sensors=True)
 
     print("done recording")
             
