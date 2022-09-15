@@ -28,6 +28,8 @@ import fpstimer
 import multiprocessing
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from mecanum_wheel.encoder_stream_test import SerialPort
+from support.pymf import get_MF_devices as get_camera_list
+
 
 import keyboard
 
@@ -52,6 +54,9 @@ class DualCameraRecorder:
         self.yResRs = 670
         self.xResRs = 750
 
+        self.device_list = get_camera_list()
+
+        self.webcam_id = self.device_list.index("e2eSoft iVCam")
 
     
     def kill_thread(self):
@@ -159,6 +164,47 @@ class DualCameraRecorder:
             _save_file.close()
             _timestamp_file.close()
 
+    def capture_webcam(self):
+        """capture webcam"""
+
+        #list available webcam
+        cap = cv2.VideoCapture(self.webcam_id)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 720)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1280)
+        cap.set(cv2.CAP_PROP_FPS, 15)
+
+        if self.record:
+            _save_pth = os.path.join(self._pth, "webcam_color.msgpack")
+            _save_file = open(_save_pth, "wb")
+            _timestamp_file = open(os.path.join(self._pth, "webcam_timestamp.msgpack"), "wb")
+
+        while True:
+            ret, frame = cap.read()
+            gray_image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            gray_image = gray_image[self.yPos:self.yPos + self.yResRs, self.xPos:self.xPos + self.xResRs].copy()
+
+            if self.record:
+                _packed_file = mp.packb(gray_image, default=mpn.encode)
+                _save_file.write(_packed_file)
+                _time_stamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+                _packed_timestamp = mp.packb(_time_stamp)
+                _timestamp_file.write(_packed_timestamp)
+
+            fpstimer.FPSTimer(self.fps_val)
+
+            if self.display:
+                cv2.imshow('webcam', gray_image)
+                cv2.waitKey(1)
+
+            if keyboard.is_pressed('q'):  # if key 'q' is pressed 
+                print('You Pressed A Key!, ending webcam')
+                cap.release()
+                cv2.destroyAllWindows()                
+                self.kill_thread()  # finishing the loop
+                if self.record:
+                    _save_file.close()
+                    _timestamp_file.close()
+                break
                 
     def record_for_calibration(self):
         """
@@ -166,6 +212,7 @@ class DualCameraRecorder:
         this does not include imu and mecanum wheel data
         """
         # record for calibration
+        pass
 
     def run(self, cart_sensors):
         """run the program"""
@@ -174,12 +221,16 @@ class DualCameraRecorder:
         if not cart_sensors:
             kinect_capture_frame = multiprocessing.Process(target=self.kinect_capture_frame)
             rs_capture_frame = multiprocessing.Process(target=self.rs_capture_frame)
+            webcam_capture_frame = multiprocessing.Process(target=self.capture_webcam)
 
             kinect_capture_frame.start()
             rs_capture_frame.start()
+            webcam_capture_frame.start()
 
             kinect_capture_frame.join()
             rs_capture_frame.join()
+            webcam_capture_frame.join()
+
 
             if self.kill_signal:
                 # kinect_capture_frame.terminate()
@@ -192,14 +243,17 @@ class DualCameraRecorder:
 
             kinect_capture_frame = multiprocessing.Process(target=self.kinect_capture_frame)
             rs_capture_frame = multiprocessing.Process(target=self.rs_capture_frame)
+            webcam_capture_frame = multiprocessing.Process(target=self.capture_webcam)
             cart_sensors = multiprocessing.Process(target=myport.run_program)
 
             kinect_capture_frame.start()
             rs_capture_frame.start()
+            webcam_capture_frame.start()
             cart_sensors.start()
 
             kinect_capture_frame.join()
             rs_capture_frame.join()
+            webcam_capture_frame.join()
             cart_sensors.join()
 
             if self.kill_signal:
@@ -212,7 +266,7 @@ if __name__ == "__main__":
     # main program
 
     """Enter the respective parameters"""
-    record = True
+    record = False
     if record:
         _name = input("Enter the name of the recording: ")
     display = True

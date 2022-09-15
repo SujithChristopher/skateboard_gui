@@ -9,7 +9,13 @@ import sys
 from cv2 import aruco
 
 
-"""these are default data, you can change it by calling the functions below"""
+"""
+these are default data, you can change it by calling the functions below
+
+these functions were initially written for MIRA split videos protocol
+
+you can use it for single file using *_sf functions, which is for a single file only
+"""
 
 _pth = r"C:\Users\CMC\Dropbox\mira\mira_vellore\splitVideos\SUJIXXXXXXXXU010120000000XXXXXXXXX\calibration"
 
