@@ -29,8 +29,9 @@ import multiprocessing
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from mecanum_wheel.encoder_stream_test import SerialPort
 from support.pymf import get_MF_devices as get_camera_list
+import subprocess
 
-
+from threading import Thread
 import keyboard
 
 class DualCameraRecorder:
@@ -255,26 +256,28 @@ class DualCameraRecorder:
         if cart_sensors:
 
             myport = SerialPort("COM4", 115200, csv_path=self._pth, csv_enable=True, single_file_protocol=True)
-
+            cart_sensors = Thread(target=myport.run_program)
             kinect_capture_frame = multiprocessing.Process(target=self.kinect_capture_frame)
             rs_capture_frame = multiprocessing.Process(target=self.rs_capture_frame)
             webcam_capture_frame = multiprocessing.Process(target=self.capture_webcam)
-            cart_sensors = multiprocessing.Process(target=myport.run_program)
-
+            
+            cart_sensors.start()
             kinect_capture_frame.start()
             rs_capture_frame.start()
             webcam_capture_frame.start()
-            cart_sensors.start()
-
+            
+            cart_sensors.join()
             kinect_capture_frame.join()
             rs_capture_frame.join()
             webcam_capture_frame.join()
-            cart_sensors.join()
+    
 
             if self.kill_signal:
                 # kinect_capture_frame.terminate()
                 # rs_capture_frame.terminate()
-                cart_sensors.terminate()
+
+                # self._imu_p.kill()
+                # cart_sensors.terminate()
                 print("killing the process")
 
 if __name__ == "__main__":
@@ -294,7 +297,7 @@ if __name__ == "__main__":
             os.makedirs(_pth)
 
     recorder = DualCameraRecorder(_pth, display=display, record=record)
-    recorder.run(cart_sensors=True)
+    recorder.run(cart_sensors=False)
 
     print("done recording")
             

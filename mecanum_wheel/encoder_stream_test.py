@@ -104,20 +104,20 @@ class SerialPort(object):
                 if keyboard.is_pressed("e"):
                     self.csv_file.close()
                     break
-            if keyboard.is_pressed("a"):
+            if keyboard.is_pressed("q"):
                 print("closing")
                 break
 
 
 if __name__ == '__main__':
-    # opts, args = getopt.getopt(sys.argv[1:], "p:", ["path"])
+    opts, args = getopt.getopt(sys.argv[1:], "p:", ["path"])
 
-    # print(opts[0])
-    # _filepath = opts[0][1]a
-    _filepath = r"C:\Users\CMC\Documents\openposelibs\pose\skateboard_gui\test_programs\test_data\cart_test_t0"
+    print(opts[0])
+    _filepath = opts[0][1]
+    # _filepath = r"C:\Users\CMC\Documents\openposelibs\pose\skateboard_gui\test_programs\test_data\cart_test_t0"
 
     # myport = SerialPort("COM15", 115200, csv_path=_filepath, csv_enable=True)
-    myport = SerialPort("COM4", 115200, csv_path=_filepath, csv_enable=True)
+    myport = SerialPort("COM4", 115200, csv_path=_filepath, csv_enable=False)
     # myport = SerialPort("COM4", 115200, csv_path="random", csv_enable=False)
     # myport = SerialPort("COM4", 115200)
     myport.run_program()
