@@ -60,7 +60,7 @@ def camera_parameters(ar_parameters = None, ar_dictionary = None, markerLength =
     return ARUCO_PARAMETERS, ARUCO_DICT, board
 
 
-def estimate_ar_pose(frame, cameraMatrix=cameraMatrix, distCoeffs=distCoeffs, ar_params = None, ar_dict = None, board = None):
+def estimate_ar_pose(frame, cameraMatrix=cameraMatrix, distCoeffs=distCoeffs,is_color= False, ar_params = None, ar_dict = None, board = None):
 
     """
     frame: frame to be processed
@@ -71,7 +71,10 @@ def estimate_ar_pose(frame, cameraMatrix=cameraMatrix, distCoeffs=distCoeffs, ar
     ARUCO_PARAMETERS = ar_params
     ARUCO_DICT = ar_dict
 
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    if is_color:
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    else:
+        gray = frame
 
     # ARUCO_PARAMETERS, ARUCO_DICT, board = camera_parameters()
     
@@ -92,15 +95,23 @@ def estimate_ar_pose(frame, cameraMatrix=cameraMatrix, distCoeffs=distCoeffs, ar
     return rotation_vectors, translation_vectors, _objPoints
 
 
-def get_ar_pose_data(_pth, cameraMatrix=cameraMatrix, distCoeffs=distCoeffs, process_raw = False, _pth_to_save=""):
+def get_ar_pose_data(_pth, cameraMatrix=cameraMatrix, distCoeffs=distCoeffs, process_raw = False, is_color = True, single_file=False, flip_frame = False, _pth_to_save=""):
 
     """
     _pth: path to video (msgpack) files containing calibration data
+    cameraMatrix: camera matrix from calibration
+    distCoeffs: distortion coefficients from calibration file
+    process_raw: if True, it will process raw data, if False, it will process processed data
+    is_color: if True, it will process color data, if False, it will process grayscale data
+    single_file: if True, it will process a single file, if False, it will process all files in the folder
+    flip_frame: if True, it will flip the frame, if False, it will not flip the frame
+    _pth_to_save: path to save the processed data
     """
     df = pd.DataFrame(columns=["frame_id", "x", "y", "z", "yaw", "pitch", "roll"])
     rotation_vectors, translation_vectors = None, None
 
     ar_params, ar_dict, board = camera_parameters()
+    _is_color = is_color
 
     if process_raw:
         targetPattern = f"{_pth}\\COLOUR*"
@@ -112,7 +123,7 @@ def get_ar_pose_data(_pth, cameraMatrix=cameraMatrix, distCoeffs=distCoeffs, pro
             unpacker = mp.Unpacker(cfile, object_hook=mpn.decode)
             for frame in unpacker:
 
-                rotation_vectors, translation_vectors, _ = estimate_ar_pose(frame, cameraMatrix=cameraMatrix, distCoeffs=distCoeffs, ar_params = ar_params, ar_dict = ar_dict, board = board)
+                rotation_vectors, translation_vectors, _ = estimate_ar_pose(frame, cameraMatrix=cameraMatrix, distCoeffs=distCoeffs, is_color = _is_color, ar_params = ar_params, ar_dict = ar_dict, board = board)
                 data = [5]
                 if rotation_vectors is not None and rotation_vectors is not []:
                     data.extend(translation_vectors[0][0])
@@ -123,7 +134,7 @@ def get_ar_pose_data(_pth, cameraMatrix=cameraMatrix, distCoeffs=distCoeffs, pro
                     df.loc[len(df)] = data
                 
             cfile.close()
-    else:
+    elif not single_file:
 
         vid_pth = os.path.join(_pth, "Video.avi")
         cap = cv2.VideoCapture(vid_pth)
@@ -148,6 +159,25 @@ def get_ar_pose_data(_pth, cameraMatrix=cameraMatrix, distCoeffs=distCoeffs, pro
             else:
                 break
         cap.release()
+    else:
+
+        cfile = open(_pth, "rb") #colour file
+        unpacker = mp.Unpacker(cfile, object_hook=mpn.decode)
+        for frame in unpacker:
+            if flip_frame:
+                frame = cv2.flip(frame, 1)
+            rotation_vectors, translation_vectors, _ = estimate_ar_pose(frame, cameraMatrix=cameraMatrix, distCoeffs=distCoeffs, ar_params = ar_params, ar_dict = ar_dict, board = board)
+            data = [5]
+            if rotation_vectors is not None and rotation_vectors is not []:
+                data.extend(translation_vectors[0][0])
+                data.extend(rotation_vectors[0][0])
+                df.loc[len(df)] = data
+            else:
+                data.extend([np.nan, np.nan, np.nan, np.nan, np.nan, np.nan])
+                df.loc[len(df)] = data
+            
+        cfile.close()
+
     print("returning dataframe")
     return df
 

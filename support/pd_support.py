@@ -4,6 +4,8 @@ import enum
 import pandas as pd
 from datetime import datetime, timedelta
 import numpy as np
+import msgpack
+import msgpack_numpy as mpn
 
 def read_df_csv(filename, offset=2):
     """
@@ -98,4 +100,18 @@ def add_datetime_diff(df, _time, _sync, _diff_name, truncate = False):
         if _count is not 0:   
             df = df.loc[:_count].copy()     # dropping unnecessary rows
     
+    return df
+
+def add_time_from_file(df, _pth):
+    """
+    df:     dataframe
+    _pth:   path to the file which has time in seconds
+    """
+    with open(_pth, "rb") as f:
+        _time_obj = msgpack.Unpacker(f)
+        _time = []
+        for i in _time_obj:
+            _time.append(i)
+    df["time"] = _time
+    df["time"] = pd.to_datetime(df["time"])
     return df
