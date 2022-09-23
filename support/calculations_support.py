@@ -163,3 +163,17 @@ def calculate_displacement(df):
 
     return df
 
+def transform_coordinates(df, rotmat, org):
+
+    for i in range(len(df)):
+        val = df[["x", "y", "z"]].loc[i].values
+        val = np.reshape(val, (3,1))
+        _temp = val + org
+        _val = rotmat.T @ _temp
+        df[["x", "y", "z"]].loc[i] = _val.T[0]
+    return df
+
+
+
+
+
