@@ -10,10 +10,8 @@ This also records IMU, and data from mecanum wheels, and saves in respective dir
 This code is written by Sujith, 13-09-2022
 """
 
-from dis import dis
 import os
 import sys
-import time
 import datetime
 from pykinect2 import PyKinectV2
 from pykinect2 import PyKinectRuntime
@@ -23,18 +21,16 @@ import numpy as np
 import pyrealsense2 as rs
 
 import cv2
-import matplotlib.pyplot as plt
 import fpstimer
 import multiprocessing
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from mecanum_wheel.encoder_stream_test import SerialPort
 from support.pymf import get_MF_devices as get_camera_list
-import subprocess
 
 from threading import Thread
 import keyboard
 
-class DualCameraRecorder:
+class MultiSensorRecorder:
     def __init__(self, _pth, display= False, record = False):
 
         """kinect parameters for recording"""
@@ -296,7 +292,7 @@ if __name__ == "__main__":
         if not os.path.exists(_pth):
             os.makedirs(_pth)
 
-    recorder = DualCameraRecorder(_pth, display=display, record=record)
+    recorder = MultiSensorRecorder(_pth, display=display, record=record)
     recorder.run(cart_sensors=False)
 
     print("done recording")
