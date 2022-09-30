@@ -110,11 +110,11 @@ class SerialPort(object):
 
 
 if __name__ == '__main__':
-    opts, args = getopt.getopt(sys.argv[1:], "p:", ["path"])
+    # opts, args = getopt.getopt(sys.argv[1:], "p:", ["path"])
 
-    print(opts[0])
-    _filepath = opts[0][1]
-    # _filepath = r"C:\Users\CMC\Documents\openposelibs\pose\skateboard_gui\test_programs\test_data\cart_test_t0"
+    # print(opts[0])
+    # _filepath = opts[0][1]
+    _filepath = r"C:\Users\CMC\Documents\openposelibs\pose\skateboard_gui\recording_programs\test_data\ghn"
 
     # myport = SerialPort("COM15", 115200, csv_path=_filepath, csv_enable=True)
     myport = SerialPort("COM4", 115200, csv_path=_filepath, csv_enable=False)

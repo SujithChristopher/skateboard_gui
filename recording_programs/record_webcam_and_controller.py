@@ -16,7 +16,7 @@ from mecanum_wheel.encoder_stream_test import SerialPort
 from support.pymf import get_MF_devices as get_camera_list
 
 class RecordData:
-    def __init__(self, _pth, cart_sensors=False):
+    def __init__(self, _pth = None, record = True):
 
         self.device_list = get_camera_list()
         self.cam_device = self.device_list.index("e2eSoft iVCam")
@@ -24,15 +24,21 @@ class RecordData:
         """webcam parameters for recording"""
         self.yResRs = 670
         self.xResRs = 750
-        self.cart_sensors = cart_sensors
 
+        self.xPos = 274 # fixed parameters
+        self.yPos = 112
+        self.record = record
+        self.start_recording = False
         self._pth = _pth
+        self.kill_signal = False
+        self.fps_val = 15
+        self.display = True
     
     def capture_webcam(self):
         """capture webcam"""
 
         #list available webcam
-        cap = cv2.VideoCapture(self.webcam_id)
+        cap = cv2.VideoCapture(self.cam_device)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
         cap.set(cv2.CAP_PROP_FPS, 15)
@@ -44,35 +50,36 @@ class RecordData:
 
         while True:
             ret, frame = cap.read()
-            gray_image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            gray_image = gray_image[self.yPos:self.yPos + self.yResRs, self.xPos:self.xPos + self.xResRs].copy()
+            if ret:
+                gray_image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                gray_image = gray_image[self.yPos:self.yPos + self.yResRs, self.xPos:self.xPos + self.xResRs].copy()
 
-            if self.record and self.start_recording:
-                _packed_file = mp.packb(gray_image, default=mpn.encode)
-                _save_file.write(_packed_file)
-                _time_stamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
-                _packed_timestamp = mp.packb(_time_stamp)
-                _timestamp_file.write(_packed_timestamp)
+                if self.record and self.start_recording:
+                    _packed_file = mp.packb(gray_image, default=mpn.encode)
+                    _save_file.write(_packed_file)
+                    _time_stamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+                    _packed_timestamp = mp.packb(_time_stamp)
+                    _timestamp_file.write(_packed_timestamp)
 
-            fpstimer.FPSTimer(self.fps_val)
+                fpstimer.FPSTimer(self.fps_val)
 
-            if self.display:
-                cv2.imshow('webcam', gray_image)
-                cv2.waitKey(1)
+                if self.display:
+                    cv2.imshow('webcam', gray_image)
+                    cv2.waitKey(1)
 
-            if keyboard.is_pressed('q'):  # if key 'q' is pressed 
-                print('You Pressed A Key!, ending webcam')
-                cap.release()
-                cv2.destroyAllWindows()                
-                self.kill_thread()  # finishing the loop
-                if self.record:
-                    _save_file.close()
-                    _timestamp_file.close()
-                break
-            
-            if keyboard.is_pressed('s'):  # if key 's' is pressed
-                print('You Pressed A Key!, started recording from webcam')
-                self.start_recording = True
+                if keyboard.is_pressed('q'):  # if key 'q' is pressed 
+                    print('You Pressed A Key!, ending webcam')
+                    cap.release()
+                    cv2.destroyAllWindows()                
+                    # self.kill_thread()  # finishing the loop
+                    if self.record:
+                        _save_file.close()
+                        _timestamp_file.close()
+                    break
+                
+                if keyboard.is_pressed('s'):  # if key 's' is pressed
+                    print('You Pressed A Key!, started recording from webcam')
+                    self.start_recording = True
 
 
     def run(self, cart_sensors):
@@ -87,8 +94,9 @@ class RecordData:
 
             if self.kill_signal:
                 print("killing the process")
+            
 
-        if cart_sensors:
+        if cart_sensors and self.record:
 
             myport = SerialPort("COM4", 115200, csv_path=self._pth, csv_enable=True, single_file_protocol=True)
             cart_sensors = Thread(target=myport.run_program)
@@ -106,6 +114,18 @@ class RecordData:
 
 if __name__ == "__main__":
 
-    record_data = RecordData()
-    _pth = os.path.join(os.path.dirname(__file__), "test_data")
-    record_data.run(_pth,cart_sensors=True)
+    """Enter the respective parameters"""
+    record = True
+    if record:
+        _name = input("Enter the name of the recording: ")
+    display = True
+    _pth = None # this is default do not change, path gets updated by your input
+
+    if record:
+        _pth = os.path.join(os.path.dirname(__file__), "test_data", _name)
+        print(_pth)
+        if not os.path.exists(_pth):
+            os.makedirs(_pth)
+
+    record_data = RecordData(_pth=_pth)
+    record_data.run(cart_sensors=True)
