@@ -17,9 +17,9 @@ these functions were initially written for MIRA split videos protocol
 you can use it for single file using *_sf functions, which is for a single file only
 """
 
-_pth = r"C:\Users\CMC\Dropbox\mira\mira_vellore\splitVideos\SUJIXXXXXXXXU010120000000XXXXXXXXX\calibration"
+_pth = os.path.dirname(os.getcwd())
 
-calib_pth = os.path.join(_pth, "AR_CALIBRATION.msgpack")
+calib_pth = os.path.join(_pth,"support", "AR_CALIBRATION.msgpack")
 _calib_file = open(calib_pth, "rb")
 unpacker = mp.Unpacker(_calib_file, object_hook=mpn.decode)
 _calib = []
@@ -224,4 +224,8 @@ def add_time_col(df, _pth):
 
 if __name__ == '__main__':
     # print("hi")
-    get_ar_pose_data(r"C:\Users\CMC\Dropbox\mira\mira_vellore\splitVideos\SUJIXXXXXXXXU010120000000XXXXXXXXX\test_trial_0", process_raw=True)
+    try:
+        get_ar_pose_data(r"C:\Users\CMC\Dropbox\mira\mira_vellore\splitVideos\SUJIXXXXXXXXU010120000000XXXXXXXXX\test_trial_0", process_raw=True)
+    except:
+        pass
+    print("in a different computer")
