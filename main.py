@@ -17,16 +17,10 @@ from pykinect2 import PyKinectV2
 from pykinect2.PyKinectRuntime import _CameraSpacePoint
 from scipy import signal
 
+from support.pymf import get_MF_devices as get_camera_list
+
 from gui_box_v1 import Ui_MainWindow
 from support.support_mp4 import generate_pdf
-
-# 290,111
-
-# kinectColor = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Color)
-# kinectDepth = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Depth)
-
-# kinect = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Color | PyKinectV2.FrameSourceTypes_Depth)
-# _kinect = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Depth | PyKinectV2.FrameSourceTypes_Color)
 
 
 mp_pose = mp.solutions.pose
@@ -156,6 +150,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.time_count = 0
         self.res = []
         self.cl_names = ["time", "X", "Y", "Z"]
+
+        # selecting the webcam
+        self.device_list = get_camera_list()
+        self.webcam_id = self.device_list.index("e2eSoft iVCam")
+        self.capture_device = cv2.VideoCapture(self.webcam_id)
+        
 
         self.cam_space = pd.DataFrame(columns=self.cl_names)
         self.cam_space = self.cam_space.astype(np.float32)
@@ -303,10 +303,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         while True:
 
-            if kinectColor.has_new_color_frame() and kinectDepth.has_new_depth_frame():
-                colorFrame1 = kinectColor.get_last_color_frame()  # PyKinect2 returns a color frame in a linear array of size (8294400,)
-                colorFrame = colorFrame1.reshape((1080, 1920, 4))  # 1920 c x 1080 r with 4 bytes (BGRA) per pixel
-                img = cv2.cvtColor(colorFrame, cv2.COLOR_BGRA2RGB)
+            # Capture frame-by-frame
+            ret, frame = self.capture_device.read()
+            if ret:
+                img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 img = cv2.flip(img, 1)
                 image = img[yPos * 2:yPos * 2 + yRes, xPos * 2:xPos * 2 + xRes].copy()
 
