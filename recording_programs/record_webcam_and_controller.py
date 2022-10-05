@@ -128,4 +128,4 @@ if __name__ == "__main__":
             os.makedirs(_pth)
 
     record_data = RecordData(_pth=_pth)
-    record_data.run(cart_sensors=True)
+    record_data.run(cart_sensors=False)
