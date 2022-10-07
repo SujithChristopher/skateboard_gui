@@ -117,7 +117,7 @@ if __name__ == '__main__':
     _filepath = r"C:\Users\CMC\Documents\openposelibs\pose\skateboard_gui\recording_programs\test_data\ghn"
 
     # myport = SerialPort("COM15", 115200, csv_path=_filepath, csv_enable=True)
-    myport = SerialPort("COM4", 115200, csv_path=_filepath, csv_enable=False)
+    myport = SerialPort("COM6", 115200, csv_path=_filepath, csv_enable=False)
     # myport = SerialPort("COM4", 115200, csv_path="random", csv_enable=False)
     # myport = SerialPort("COM4", 115200)
     myport.run_program()
