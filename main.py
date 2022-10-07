@@ -12,9 +12,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from cv2 import aruco
-from pykinect2 import PyKinectRuntime
-from pykinect2 import PyKinectV2
-from pykinect2.PyKinectRuntime import _CameraSpacePoint
+
 from scipy import signal
 
 from support.pymf import get_MF_devices as get_camera_list
@@ -49,7 +47,7 @@ ARUCO_DICT = aruco.Dictionary_get(aruco.DICT_ARUCO_ORIGINAL)
 board = aruco.GridBoard_create(
     markersX=1,
     markersY=1,
-    markerLength=0.04,
+    markerLength=0.05,
     markerSeparation=0.01,
     dictionary=ARUCO_DICT)
 
@@ -124,8 +122,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.threadpool = QThreadPool()
         self.cam = cv2.VideoCapture(0)
-        self.yRes = 736
-        self.xRes = 864
+        self.yRes = 640
+        self.xRes = 480
 
         self.t_vec = []
         self.r_vec = []
@@ -153,6 +151,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         # selecting the webcam
         self.device_list = get_camera_list()
+        print(self.device_list)
         self.webcam_id = self.device_list.index("e2eSoft iVCam")
         self.capture_device = cv2.VideoCapture(self.webcam_id)
         
@@ -163,22 +162,20 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def orign_set(self):
 
-        yPos = 111
-        xPos = 290
+        yPos = 0
+        xPos = 0
         yRes = self.yRes
         xRes = self.xRes
 
         org_file = open(".//src//orgin.pickle", "wb")
-        if kinectColor.has_new_color_frame() and kinectDepth.has_new_depth_frame():
-            colorFrame1 = kinectColor.get_last_color_frame()  # PyKinect2 returns a color frame in a linear array of size (8294400,)
-            colorFrame = colorFrame1.reshape((1080, 1920, 4))  # 1920 c x 1080 r with 4 bytes (BGRA) per pixel
-            img = cv2.cvtColor(colorFrame, cv2.COLOR_BGRA2RGB)
+        # Capture frame-by-frame
+        ret, frame = self.capture_device.read()
+        if ret:
+            img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             img = cv2.flip(img, 1)
-            image = img[yPos * 2:yPos * 2 + yRes, xPos * 2:xPos * 2 + xRes].copy()
-            self.colorImage = image
+            gray = img[yPos * 2:yPos * 2 + yRes, xPos * 2:xPos * 2 + xRes].copy()
 
             try:
-                gray = cv2.cvtColor(self.colorImage, cv2.COLOR_BGR2GRAY)
                 corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, ARUCO_DICT,
                                                                       parameters=ARUCO_PARAMETERS)
                 corners, ids, rejectedImgPoints, recoveredIds = aruco.refineDetectedMarkers(
@@ -193,7 +190,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 if ids is not None and len(ids) > 0:
                     # Estimate the posture per each Aruco marker
                     rotation_vectors, translation_vectors, _objPoints = aruco.estimatePoseSingleMarkers(
-                        corners, 0.04,
+                        corners, 0.05,
                         cameraMatrix,
                         distCoeffs)
                     for rvec, tvec in zip(rotation_vectors, translation_vectors):
@@ -285,8 +282,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         mp_pose = mp.solutions.pose
         pose = mp_pose.PoseLandmark
 
-        yPos = 111
-        xPos = 290
+        yPos = 0
+        xPos = 0
         yRes = self.yRes
         xRes = self.xRes
 
@@ -306,7 +303,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             # Capture frame-by-frame
             ret, frame = self.capture_device.read()
             if ret:
-                img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                # img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                img = frame
                 img = cv2.flip(img, 1)
                 image = img[yPos * 2:yPos * 2 + yRes, xPos * 2:xPos * 2 + xRes].copy()
 
@@ -344,12 +342,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                             if ids is not None and len(ids) > 0:
                                 # Estimate the posture per each Aruco marker
                                 rotation_vectors, translation_vectors, _objPoints = aruco.estimatePoseSingleMarkers(
-                                    corners, 0.04,
+                                    corners, 0.05,
                                     cameraMatrix,
                                     distCoeffs)
                                 for rvec, tvec in zip(rotation_vectors, translation_vectors):
                                     self.colorImage = aruco.drawAxis(self.colorImage, cameraMatrix, distCoeffs, rvec,
-                                                                     tvec, 0.04)
+                                                                     tvec, 0.05)
                                     self.tvec_dist = tvec
 
                                     self.cam_space.loc[count, self.cl_names[0]] = self.time_float
