@@ -306,6 +306,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 # img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 img = frame
                 img = cv2.flip(img, 1)
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
                 image = img[yPos * 2:yPos * 2 + yRes, xPos * 2:xPos * 2 + xRes].copy()
 
                 self.colorImage = image
